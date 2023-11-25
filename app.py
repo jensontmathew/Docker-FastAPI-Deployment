@@ -1,44 +1,36 @@
-
 import uvicorn
 from fastapi import FastAPI
-app=FastAPI()
-
-from pydantic import BaseModel
+from BankNotes import BankNote
+import numpy as np
 import pickle
+import pandas as pd
 
-# Load your trained model
-with open('model.pkl', 'rb') as model_file:
-    model = pickle.load(model_file)
-
-
-class BankNote(BaseModel):
-    variance: float
-    skewness: float
-    curtosis: float
-    entropy: float
+app = FastAPI()
+pickle_in = open("model.pkl","rb")
+classifier=pickle.load(pickle_in)
 
 @app.get('/')
-def get_name(name:str):
-    return {'Bank Note Authentication'}
+def index():
+    return {'message': 'Hello, World'}
+
 
 @app.post('/predict')
 def predict_banknote(data:BankNote):
-    data=data.dict()
+    data = data.dict()
     variance=data['variance']
     skewness=data['skewness']
     curtosis=data['curtosis']
     entropy=data['entropy']
 
-    prediction=model.predict([[variance,skewness,curtosis,entropy]])
-
-    if prediction[0]>0.5:
-        print('Fake Note')
+    prediction = classifier.predict([[variance,skewness,curtosis,entropy]])
+    if(prediction[0]>0.5):
+        prediction="Fake note"
     else:
-        print("It's a Bank Note")
-
+        prediction="Its a Bank note"
     return {
-            'prediction':prediction
-        }
+        'prediction': prediction
+    }
 
-if __name__=='__main__':
-    uvicorn.run(app,host='127.0.0.1',port=8000)
+if __name__ == '__main__':
+    uvicorn.run(app, host='127.0.0.1', port=8000)
+    
